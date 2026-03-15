@@ -30,13 +30,14 @@ def corrector_node(state: GraphState) -> Dict[str, Any]:
         system_prompt = """
         You are an expert Presentation Editor and Quality Assurance agent.
         You will be given:
-        1. The intended slide schema.
-        2. The target entity name.
-        3. The structured data populated for that entity.
+        1. The intended slide schema (which contains examples from the ORIGINAL template's topic).
+        2. The TARGET ENTITY name (the NEW topic we are generating slides for).
+        3. The structured data populated for that TARGET ENTITY.
         
         Your job is to act as a Quality Gate. You must check for:
-        - Hallucinations: Does the data seem fake or completely unrelated to the target entity?
-        - Missing Data: Did the structurer fail to populate a field?
+        - Entity Drift: The structured data MUST be about the new TARGET ENTITY. Ignore the fact that the schema's 'original_text' examples are about a different topic. If the target entity is 'Apple' but the data talks about 'Microsoft' (from the template), that is a failure.
+        - Hallucinations: Does the data seem fake or completely unrelated to the TARGET ENTITY?
+        - Missing Data: Did the structurer fail to populate a field with meaningful text (e.g. just writing "Title")?
         
         Output ONLY valid JSON with two keys:
         1. "passed": true if the data is acceptable, false if it needs revision.

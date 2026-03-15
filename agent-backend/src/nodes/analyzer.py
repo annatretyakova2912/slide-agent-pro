@@ -16,54 +16,53 @@ def template_analyzer_node(state: GraphState) -> Dict[str, Any]:
         print("OPENAI_API_KEY not found. Falling back to generic schema.")
         # Fallback uses shape_ids observed in the typical Template .pptx
         return {"template_schema": {
-            "fields": [
-                {"field_name": "title", "description": "Platform Name", "shape_id": 13, "original_text": "Platform / Provider Name"},
-                {"field_name": "description", "description": "Platform Description", "shape_id": 8, "original_text": "Coursera is a leading global platform..."},
-                {"field_name": "courses", "description": "Relevant Courses", "shape_id": 16, "original_text": "Introduction to ML..."},
-            ]
+                "fields": [],
+                "visual_elements": []
         }}
         
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
     
     system_prompt = """
-    You are an expert presentation analyzer. Your job is to look at the JSON representation of a PowerPoint slide 
-    and extract a "Data Schema" out of it. 
-    
-    Identify EVERY logical piece of text information (the "fields") that another agent needs to research and 
-    provide in order to populate a slide with this exact same structure for a different entity.
-    This includes titles, body paragraphs, bullet points, numbers denoting prices, etc.
-    
-    CRITICAL FOR TEXT FIELDS: For every text field you identify, you MUST include:
-    1. A descriptive `field_name`.
-    2. A `description` of what data belongs there.
-    3. The exact `shape_id` found in the JSON for the shape that holds the text.
-    4. The exact `original_text` that is currently in that shape. DO NOT TRUNCATE OR ABBREVIATE IT. You must provide the full text so its word count can be accurately determined.
-    
-    CRITICAL FOR VISUAL ELEMENTS: There may ALSO be "scoring grids" where a visual icon (like a tick mark image) is placed over a specific number (e.g. 1 to 10) to indicate a score. For these visual elements, you must extract:
-    1. `element_name` (e.g., "user_friendliness_score")
-    2. `description` 
-    3. `shape_id_to_move`: The exact `shape_id` of the tick mark icon (usually a PICTURE or Graphic) that represents the score marker!
-    4. `options_mapping`: A dictionary mapping the score strings ("1", "2", "3", etc.) to the `shape_id` of the text box that holds that number on that row.
+    You are a Lead Presentation Architect. Your task is to reverse-engineer a PowerPoint slide's "Functional DNA" from its JSON representation. 
 
-    Output ONLY valid JSON representing a dictionary with two keys: "fields" (list of text objects) and "visual_elements" (list of visual grid objects):
-    {{
-      "fields": [
-        {{
-           "field_name": "main_subtitle_description",
-           "description": "A 3-4 string description of the entity overview",
-           "shape_id": 8,
-           "original_text": "Coursera is a leading global platform that partners with over 375 premier universities and companies..."
-        }}
-      ],
-      "visual_elements": [
-        {{
-           "element_name": "user_friendliness_score",
-           "description": "Score from 1 to 10 for User-friendliness",
-           "shape_id_to_move": 108,
-           "options_mapping": {{"1": 21, "2": 22, "3": 23, "4": 24, "5": 25, "6": 26, "7": 27, "8": 28, "9": 29, "10": 30}}
-        }}
-      ]
-    }}
+Another agent (the Researcher) will use your output to find data for a new topic, and a third agent (the Structurer) will use it to rebuild the slide. You must capture not just the content, but the logical structure, intent, organization and design.
+
+### GUIDING PRINCIPLES
+1. INTERPRET STRUCTURE: Don't just list shapes. Identify if shapes form a "Logical Group" (e.g., 3 columns forming a "Benefits" section, a 1-10 scale forming a "Rating Grid", a set of arrows forming a "Process Flow", a chart, a table, a mind map, etc.).
+2. HIERARCHY MATTERS: Distinguish between the Main Title, Section Headers, and Body Text.
+3. VISUAL LOGIC: Identify "Markers" (icons, checkmarks, or highlight boxes) that are meant to be moved or duplicated based on data. Some of them might have to be adapted / moved by the Structurer. 
+
+### EXTRACTION REQUIREMENTS
+
+#### 1. Text Fields (`fields`)
+For every logical text block, provide:
+- `field_name`: A semantic name (e.g., "competitor_name_header").
+- `description`: Instructions for the researcher (e.g., "Find the official name of the company").
+- `shape_id`: The unique ID from the JSON.
+- `original_text`: The full, verbatim text.
+- `formatting_logic`: Note if the text contains mixed styles (e.g., "First word is Bold/Blue, rest is standard" or "The number is in font size X, the rest is in font size Y").
+
+#### 2. Logical Groups & Grids (`structural_groups`)
+Identify collections of shapes that work together:
+- `group_type`: (e.g., "data_grid", "process_steps", "comparison_table", "rating_scale").
+- `member_shape_ids`: A list of all shape IDs / other objects involved in this structure.
+- `logic_description`: Explain how it works (e.g., "This is a 5-step horizontal chevron flow. Each chevron contains a title and a description.").
+
+#### 3. Dynamic Visual Elements (`dynamic_elements`)
+For icons or shapes that represent data points (like tick marks / checkmarks / scores):
+- `element_name`: (e.g., "market_presence_indicator").
+- `shape_id_to_transform`: The ID of the icon/shape that needs to move or change.
+- `interaction_type`: (e.g., "reposition", "change_color", "duplicate").
+- `mapping_reference`: A dictionary of possible values to their corresponding anchor `shape_ids` (e.g., Score "High" maps to Shape ID 45).
+
+### OUTPUT FORMAT
+Output ONLY valid JSON:
+{{
+  "slide_summary": "A brief description of the slide's purpose (e.g., 'Competitor Comparison Table')",
+  "fields": [...],
+  "structural_groups": [...],
+  "dynamic_elements": [...]
+}}
     """
     
     prompt = ChatPromptTemplate.from_messages([

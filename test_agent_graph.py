@@ -23,7 +23,7 @@ def run_test():
     # Mock initial state
     initial_state = {
         "template_path": "data/templates/Template .pptx",
-        "entities": ["Udemy"],
+        "entities": ["The Knowledge Academy", "Udemy"],
         "current_entity_index": 0,
         "template_schema": None,
         "research_data": None,
