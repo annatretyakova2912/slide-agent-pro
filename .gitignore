@@ -1,22 +1,66 @@
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
+# ==== Secrets / Environment Variables ====
+.env
+.env*
+*.env
+
+# ==== Python ====
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+
+# ==== Virtual Environments ====
+venv/
+.venv/
+env/
+.env/
+
+# ==== macOS ====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ==== Project Data / Output Files ====
+# Template files (sensitive business data)
+data/
+
+# Generated output presentations
+output_*.pptx
+~$*.pptx
+
+# LLM extraction debug dumps
+template_extraction_output.json
+*_extraction_output.json
+
+# Scratch / test scripts
+test_analyzer_graphic.py
+
+# ==== IDE ====
 .vscode/
-#Cache folder
+.idea/
+*.swp
+
+# ==== AL (legacy) ====
 .alcache/
-#Symbols folder
 .alpackages/
-#Snapshots folder
 .snapshots/
-#Testing Output folder
 .output/
-#Extension App-file
 *.app
-#Rapid Application Development File
 rad.json
-#Translation Base-file
 *.g.xlf
-#License-file
 *.flf
-#Test results file
 TestResults.xml
